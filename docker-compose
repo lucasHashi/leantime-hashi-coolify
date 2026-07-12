@@ -1,0 +1,47 @@
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-leantime}
+      - MYSQL_USER=${MYSQL_USER:-admin}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-senha_segura_db}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-senha_segura_root}
+    volumes:
+      - leantime-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  leantime:
+    image: leantime/leantime:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - LEAN_DB_HOST=db
+      - LEAN_DB_USER=${MYSQL_USER:-admin}
+      - LEAN_DB_PASSWORD=${MYSQL_PASSWORD:-senha_segura_db}
+      - LEAN_DB_DATABASE=${MYSQL_DATABASE:-leantime}
+      - LEAN_EMAIL_RETURN=${LEAN_EMAIL_RETURN:-admin@seudominio.com}
+      - LEAN_APP_URL=https://yugixzw7do7jij3ungyboimkttdah.lucashashi.com.br/
+    expose:
+      - "8080"
+    volumes:
+      - leantime-plugins:/var/www/html/app/Plugins
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  leantime-db-data:
+  leantime-plugins:
